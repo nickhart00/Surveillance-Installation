@@ -182,7 +182,6 @@ void draw() {
       if (myVal == 20) {
 
         recordImages = true;
-            countdown = true;
         newTime += 70000;
       }
     }
@@ -212,7 +211,7 @@ void draw() {
   { 
     imagesPlaying = false;
     sensorLooking = false;
-
+    countdown = true;
     //start video recording
     saveFrame ("video/" + "person" + 0 + "_" + nf (exportCounter, 4) + ".jpg");
     exportCounter += 1;
@@ -352,7 +351,7 @@ void robotPress() {
 void theGreenEffect() {
   // Map the threshold to mouse location
   //threshold = map(mouseX, 0, width, 5, 50);
-  threshold = 25;
+  threshold = 50;
 
   // We are looking at the video's pixels, the memorized backgroundImage's pixels, as well as accessing the display pixels. 
   // So we must loadPixels() for all!
