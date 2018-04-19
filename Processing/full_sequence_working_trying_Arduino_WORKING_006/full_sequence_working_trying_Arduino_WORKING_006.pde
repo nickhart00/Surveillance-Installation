@@ -68,7 +68,7 @@ void setup() {
   delay(1000);
   myPort = new Serial(this, portName, 9600);
   size(1920, 1080);
-  frameRate(15);
+  frameRate(30);
 
   //Let's get a Robot...
   try { 
@@ -103,7 +103,7 @@ void setup() {
     //needed to hard code the dimensions to HD
     //camera[i] must change when changing computers
     //cam = new Capture(this, 1920, 1080, cameras[30]);
-    cam = new Capture(this, cameras[16]);
+    cam = new Capture(this, cameras[15]);
     //cam = new Capture(this, width, height, 30); //old dependent on window
     cam.start();
   }
@@ -122,7 +122,6 @@ void setup() {
   println(bgImageChosen);
 
   //backgroundReplace = loadImage("facebook-tile.jpg");
-
 
 
 
@@ -240,6 +239,8 @@ void draw() {
     recordImages = false;
     //setup();
     loadImages();
+    loadBackround();
+      robotPress();
     println ("reload complete");
     //}
     theReset = false;
@@ -281,6 +282,23 @@ void draw() {
   if (countdown == true) {
     playUI();
   }
+}
+
+void loadBackround() {
+  // Create an empty image the same size as the video for greenscreening
+  backgroundImage = createImage(1920, 1080, RGB);
+  float randomNum = random(-1, 1);
+  int imagePicked;
+  if (randomNum > 0) {
+    imagePicked = 1;
+  } else {
+    imagePicked = 0;
+  }
+  String bgImageChosen = "background_" + imagePicked + ".jpg";
+  backgroundReplace = loadImage(bgImageChosen);
+  println(bgImageChosen);
+
+  //backgroundReplace = loadImage("facebook-tile.jpg");
 }
 
 void loadImages() {
