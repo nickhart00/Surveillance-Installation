@@ -3,15 +3,21 @@
 // controlling the threshold variable with the mouse.  
 
 // Click the mouse to memorize a current background image
+import gab.opencv.*;
 import processing.video.*;
 
 // Variable for capture device
 Capture cam;
+OpenCV opencv;
+Movie mov1;
+Movie backgroundReplace;
+
+boolean playMov1;
 
 // Saved background
 PImage backgroundImage;
 
-PImage backgroundReplace;
+//PImage backgroundReplace;
 
 // How different must a pixel be to be a foreground pixel
 float threshold = 20;
@@ -33,15 +39,19 @@ void setup() {
 
     // The camera can be initialized directly using an 
     // element from the array returned by list():
-    cam = new Capture(this, 1920, 1080, cameras[30]);
+    cam = new Capture(this, 1920, 1080, cameras[15]);
     //cam = new Capture(this, 1920, 1080, 30); //old dependent on window
     cam.start();
   }
+  mov1 = new Movie(this, "Break.mov");
+  opencv = new OpenCV(this, 1920, 1080);
 
+  opencv.startBackgroundSubtraction(5, 3, 0.5);
 
+  mov1.loop();
+  mov1.play();
   // Create an empty image the same size as the video
   backgroundImage = createImage(cam.width, cam.height, RGB);
-  backgroundReplace = loadImage("beach.jpg");
 }
 
 // New frame available from camera
@@ -49,21 +59,39 @@ void captureEvent(Capture cam) {
   cam.read();
 }
 
-
+void movieEvent(Movie m) {
+  m.read();
+}
 void draw() {
+  image(mov1, 0, 0, width, height);  
+  tint(255, 120);
+  image(cam, 0, 0);  
   theGreenEffect();
-
 }
 
-void theGreenEffect(){
-    // Map the threshold to mouse location
+/*void playMovie() {
+  if (playMov1 == true) {
+    mov1.play();
+    backgroundReplace.play();
+    //mov2.stop();
+    //mov3.stop();
+    image(mov1, 0, 0, width, height);
+  } else {
+    playMov1 = false;
+    mov1.stop();
+  }
+}*/
+void theGreenEffect() {
+  // Map the threshold to mouse location
   threshold = map(mouseX, 0, width, 5, 50);
 
   // We are looking at the video's pixels, the memorized backgroundImage's pixels, as well as accessing the display pixels. 
   // So we must loadPixels() for all!
   loadPixels();
-  cam.loadPixels(); 
-  backgroundImage.loadPixels();
+
+  mov1.loadPixels();
+    tint(255, 120);
+      cam.loadPixels(); 
 
   // Begin loop to walk through every pixel
   for (int x = 0; x < cam.width; x ++ ) {
@@ -89,9 +117,9 @@ void theGreenEffect(){
         pixels[loc] = fgColor;
       } else {
         // If not, display green
-        pixels[loc] = color(0, 255, 0);
+        //pixels[loc] = color(0, 255, 0);
         // If not, display the beach scene
-        //pixels[loc] = backgroundReplace.pixels[loc];
+        pixels[loc] = mov1.pixels[loc];
       }
     }
   }

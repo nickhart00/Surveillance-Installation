@@ -17,9 +17,8 @@ boolean videoOver = false;
 boolean sensorLooking = false;
 int exportCounter = 0;
 int cycleCounter = 0;
-int recordingLength = 75;
-int numFrames = 75;  // The number of frames in the animation
-int uiNumFrames = 480;  // The number of frames in the animation
+int recordingLength = 30;
+int numFrames = 30;  // The number of frames in the animation
 int currentFrame = 0;
 PImage[] images = new PImage[numFrames];
 PImage[] uiImages = new PImage[numFrames];
@@ -35,6 +34,7 @@ int decrementing = 71;
 Capture cam;
 Serial myPort;
 Movie mov1;
+Movie backgroundReplace;
 
 //background environment videos
 //Movie bgMov1;
@@ -52,7 +52,7 @@ boolean playRecorded;
 
 // Saved background for greenscreen (needs to be array of others
 PImage backgroundImage;
-PImage backgroundReplace;
+//PImage backgroundReplace;
 
 // How different must a pixel be to be a foreground pixel
 float threshold = 20;
@@ -68,7 +68,7 @@ void setup() {
   delay(1000);
   myPort = new Serial(this, portName, 9600);
   size(1920, 1080);
-  frameRate(30);
+  frameRate(15);
 
   //Let's get a Robot...
   try { 
@@ -79,7 +79,6 @@ void setup() {
     exit();
   }
 
-  mov1 = new Movie(this, "station.mov");
 
   //background environment videos
   //bgMov1 = new Movie(this, "station.mov");
@@ -103,27 +102,58 @@ void setup() {
     //needed to hard code the dimensions to HD
     //camera[i] must change when changing computers
     //cam = new Capture(this, 1920, 1080, cameras[30]);
-    cam = new Capture(this, cameras[15]);
+    cam = new Capture(this, 1920, 1080, cameras[15]);
     //cam = new Capture(this, width, height, 30); //old dependent on window
     cam.start();
   }
 
+
+
   // Create an empty image the same size as the video for greenscreening
-  backgroundImage = createImage(1920, 1080, RGB);
+  //backgroundImage = createImage(1920, 1080, RGB);
   float randomNum = random(-1, 1);
-  int imagePicked;
+  int imagePicked; 
   if (randomNum > 0) {
     imagePicked = 1;
   } else {
     imagePicked = 0;
   }
-  String bgImageChosen = "background_" + imagePicked + ".jpg";
-  backgroundReplace = loadImage(bgImageChosen);
+  String bgImageChosen = "background_" + imagePicked + ".mov";
+  //backgroundReplace = loadImage(bgImageChosen);
   println(bgImageChosen);
+  mov1 = new Movie(this, bgImageChosen);
 
-  //backgroundReplace = loadImage("facebook-tile.jpg");
+
+  //mov1 = new Movie(this, "background_0.mov");
+  mov1.loop();
+  mov1.play();
+  mov1.pause();
 
 
+  backgroundImage = createImage(cam.width, cam.height, RGB);
+  /* // Create an empty image the same size as the video for greenscreening
+   backgroundImage = createImage(1920, 1080, RGB);
+   float randomNum = random(-1, 1);
+   int imagePicked; 
+   if (randomNum > 0) {
+   imagePicked = 1;  
+   } else {
+   imagePicked = 0;
+   }
+   String bgImageChosen = "background_" + imagePicked + ".jpg";
+   backgroundReplace = loadImage(bgImageChosen);
+   println(bgImageChosen);
+   
+   //backgroundReplace = loadImage("facebook-tile.jpg");
+   */
+
+
+  /*if (playMov1 == true) {
+   mov1.play();
+   //mov2.stop();
+   //mov3.stop();
+   image(mov1, 0, 0, width, height);
+   } */
 
   //load ui images
   for (int i = 0; i < numFrames; i++) {
@@ -149,7 +179,9 @@ void draw() {
   if (cam.available() == true) {
     cam.read();
   }
-  image(cam, 0, 0);
+  image(mov1, 0, 0, width, height);  
+  image(cam, 0, 0); 
+  theGreenEffect(); 
   // The following does the same, and is faster when just drawing the image
   // without any additional resizing, transformations, or tint.
   //set(0, 0, cam);
@@ -170,7 +202,7 @@ void draw() {
     millis = millis(); //store the time
     println("the millis is " + millis);
 
-    if (millis > newTime) { //if time after that is over 30s
+    if (millis > newTime) { //if time after that is over 15s
       sensorLooking = true; //reactivate sensor
     } else {
       sensorLooking = false;
@@ -179,9 +211,9 @@ void draw() {
       myVal = 20;
       println("my val is " + myVal);
       if (myVal == 20) {
-
         recordImages = true;
-        newTime += 70000;
+
+        newTime += 30000;
       }
     }
     sensorLooking = false;
@@ -208,6 +240,7 @@ void draw() {
   // ------------ STEP 001 CAPTURE
   if (recordImages == true)
   { 
+    mov1.play();
     imagesPlaying = false;
     sensorLooking = false;
     countdown = true;
@@ -240,18 +273,20 @@ void draw() {
     //setup();
     loadImages();
     loadBackround();
-      robotPress();
+    robotPress();
     println ("reload complete");
     //}
     theReset = false;
     delay(100);
     imagesPlaying = true;
     println ("started image playing");
+    mov1.pause();
   }
 
 
   // ------------ STEP 003 PLAY RECORDiING
   if (imagesPlaying == true) {
+    mov1.pause();
     countdown = false;
     sensorLooking = false;
     myVal = 0;
@@ -270,11 +305,14 @@ void draw() {
      offset+=2;
      }*/
     cycleCounter++;
-    if (cycleCounter > (75*5)) {
+    if (cycleCounter > (numFrames*3 )) {
       println ("done cyclying video");
       imagesPlaying = false;
       println ("imagesPlaying is now false");
       cycleCounter = 0;
+    } else {
+      sensorLooking = false;
+      recordImages = false;
     }
   }
 
@@ -286,7 +324,6 @@ void draw() {
 
 void loadBackround() {
   // Create an empty image the same size as the video for greenscreening
-  backgroundImage = createImage(1920, 1080, RGB);
   float randomNum = random(-1, 1);
   int imagePicked;
   if (randomNum > 0) {
@@ -294,12 +331,31 @@ void loadBackround() {
   } else {
     imagePicked = 0;
   }
-  String bgImageChosen = "background_" + imagePicked + ".jpg";
-  backgroundReplace = loadImage(bgImageChosen);
+  String bgImageChosen = "background_" + imagePicked + ".mov";
+  //  backgroundReplace = loadImage(bgImageChosen);
   println(bgImageChosen);
+  mov1 = new Movie(this, bgImageChosen);
+  mov1.loadPixels();
+  mov1.loop();
+  mov1.play();
+  mov1.pause();
+  updatePixels();
+  /*
+ // Create an empty image the same size as the video for greenscreening   
+   backgroundImage = createImage(1920, 1080, RGB);
+   float randomNum = random(-1, 1);
+   int imagePicked;
+   if (randomNum > 0) {
+   imagePicked = 1;
+   } else {
+   imagePicked = 0;
+   }
+   String bgImageChosen = "background_" + imagePicked + ".jpg";
+   backgroundReplace = loadImage(bgImageChosen);
+   println(bgImageChosen);*/
 
   //backgroundReplace = loadImage("facebook-tile.jpg");
-}
+} 
 
 void loadImages() {
   //load recorded images
@@ -316,16 +372,6 @@ void playUI() {
   image(uiImages[(currentFrame+offset) % numFrames], 0, 0);
 }
 
-/*
-void timerSequence() {
- 
- recordImages = true;
- println ("recordImages is now true");
- exportCounter = 0;
- println ("started image recording");
- }
- */
-
 
 /*void keyPressed() {
  if (key == 'i') {
@@ -334,30 +380,6 @@ void timerSequence() {
  }
  }*/
 
-
-
-/*
- THIS WILL POTENTIALLY PLAY BACKGROUND VIDEOS
- // if sensorVal show/start movie else show black
- if (timeUp == true) {
- playMov1 = true;
- } else {
- playMov1 = false;
- mov1.stop();
- rect(0, 0, width, height);
- fill(0);
- println(sensorVal);
- }
- if (playMov1 == true) {
- mov1.play();
- //mov2.stop();
- //mov3.stop();
- image(mov1, 0, 0, width, height);
- } 
- 
- */
-
-//}
 
 void robotPress() {
   robot.keyPress(KeyEvent.VK_SPACE);
@@ -369,13 +391,15 @@ void robotPress() {
 void theGreenEffect() {
   // Map the threshold to mouse location
   //threshold = map(mouseX, 0, width, 5, 50);
-  threshold = 50;
+  threshold = 50  ;
 
   // We are looking at the video's pixels, the memorized backgroundImage's pixels, as well as accessing the display pixels. 
   // So we must loadPixels() for all!
   loadPixels();
+  mov1.loadPixels();
   cam.loadPixels(); 
-  backgroundImage.loadPixels();
+  //backgroundImage.loadPixels();
+
 
   // Begin loop to walk through every pixel
   for (int x = 0; x < cam.width; x ++ ) {
@@ -403,7 +427,7 @@ void theGreenEffect() {
         // If not, display green
         //pixels[loc] = color(0, 255, 0);
         // If not, display the beach scene
-        pixels[loc] = backgroundReplace.pixels[loc];
+        pixels[loc] = mov1.pixels[loc];
       }
     }
   }
@@ -418,4 +442,6 @@ void keyPressed() {
   // x,y,width, and height of copy destination
   backgroundImage.copy(cam, 0, 0, cam.width, cam.height, 0, 0, cam.width, cam.height);
   backgroundImage.updatePixels();
+  //backgroundImage.copy(cam, 0, 0, cam.width, cam.height, 0, 0, cam.width, cam.height);
+  //backgroundImage.updatePixels();
 }
